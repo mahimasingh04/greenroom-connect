@@ -1,16 +1,30 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, Users, Clock, Wallet } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, Wallet, Check } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { EventData } from '@/types/event';
 import { formatDate } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import { getUserTicketsForEvent } from '@/services/registrationService';
+import { useWallet } from '@/contexts/WalletContext';
 
 type EventCardProps = {
   event: EventData;
 };
 
 const EventCard: React.FC<EventCardProps> = ({ event }) => {
+  const { address } = useWallet();
+  
+  // Check if user has registered for this event
+  const { data: userTickets } = useQuery({
+    queryKey: ['userTickets', event.id, address],
+    queryFn: () => address ? getUserTicketsForEvent(event.id, address) : Promise.resolve([]),
+    enabled: !!address
+  });
+  
+  const hasRegistered = userTickets && userTickets.length > 0;
+  
   // Helper function to determine status badge color
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -37,6 +51,15 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
             </Badge>
             <Badge className="bg-greenroom-500 hover:bg-greenroom-600">{event.category}</Badge>
           </div>
+          
+          {hasRegistered && (
+            <div className="absolute top-3 right-3">
+              <Badge className="bg-green-500 hover:bg-green-600 flex items-center gap-1">
+                <Check size={12} />
+                Registered
+              </Badge>
+            </div>
+          )}
         </div>
         <div className="p-5 flex flex-col flex-grow">
           <h3 className="text-xl font-bold mb-2 line-clamp-1">{event.title}</h3>

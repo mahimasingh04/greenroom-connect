@@ -1,36 +1,79 @@
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import MainLayout from '@/components/layout/MainLayout';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Calendar, 
-  MapPin, 
-  Users, 
+import {
+  Calendar,
+  MapPin,
+  Users,
   Clock,
-  User, 
-  Ticket, 
+  User,
+  Ticket,
   ArrowLeft,
   Wallet,
   Building,
   Check,
   X,
-  AlertCircle
+  AlertCircle,
+  FileText
 } from 'lucide-react';
+
 import { getEventById } from '@/services/eventService';
+import { getUserTicketsForEvent, getUserApplicationForEvent } from '@/services/registrationService';
 import { useWallet } from '@/contexts/WalletContext';
 import { formatDate, shortenAddress } from '@/lib/utils';
+import RegisterButton from '@/components/events/RegisterButton';
+import ApplicationForm from '@/components/events/ApplicationForm';
+import ApplicationStatus from '@/components/events/ApplicationStatus';
+import RegistrationStatus from '@/components/events/RegistrationStatus';
+
+// Import dialog components for application form
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 const EventDetails = () => {
   const { id } = useParams<{ id: string }>();
-  const { address, userType } = useWallet();
+  const { address } = useWallet();
   
+  const [applicationDialogOpen, setApplicationDialogOpen] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
   const { data: event, isLoading, error } = useQuery({
     queryKey: ['event', id],
     queryFn: () => getEventById(id || '')
   });
+
+  // Get user's ticket for this event if they have one
+  const { data: userTickets } = useQuery({
+    queryKey: ['userTickets', id, address, refreshTrigger],
+    queryFn: () => address && id ? getUserTicketsForEvent(id, address) : Promise.resolve([]),
+    enabled: !!address && !!id
+  });
+
+  // Get user's application for this event if they have one
+  const { data: userApplication } = useQuery({
+    queryKey: ['userApplication', id, address, refreshTrigger],
+    queryFn: () => address && id ? getUserApplicationForEvent(id, address) : Promise.resolve(null),
+    enabled: !!address && !!id && (event?.applicationRequired ?? false)
+  });
+
+  const handleRegistrationSuccess = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
+  const handleApplicationSuccess = () => {
+    setApplicationDialogOpen(false);
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   // Helper function to determine status badge color
   const getStatusColor = (status: string) => {
@@ -54,6 +97,15 @@ const EventDetails = () => {
 
   // Check if user is organizer
   const isOrganizer = event && address && event.organizer.address.toLowerCase() === address.toLowerCase();
+
+  // Check if user has registered
+  const hasRegistered = userTickets && userTickets.length > 0;
+
+  // Check if user has applied
+  const hasApplied = userApplication !== null;
+
+  // Check if user's application was approved
+  const isApplicationApproved = userApplication?.status === 'approved';
 
   if (isLoading) {
     return (
@@ -139,17 +191,27 @@ const EventDetails = () => {
             </Link>
           </Button>
           
-          {address && !isOrganizer && event.status !== 'past' && (
+          {address && !isOrganizer && event.status !== 'past' && !hasRegistered && (
             <div className="flex gap-2">
               {event.applicationRequired && event.applicationStatus === 'open' ? (
-                <Button className="bg-greenroom-500 hover:bg-greenroom-600">
-                  Apply Now
-                </Button>
+                <>
+                  {!hasApplied && (
+                    <Button 
+                      className="bg-greenroom-500 hover:bg-greenroom-600"
+                      onClick={() => setApplicationDialogOpen(true)}
+                    >
+                      <FileText size={16} className="mr-2" />
+                      Apply Now
+                    </Button>
+                  )}
+                </>
               ) : (
-                <Button className="bg-greenroom-500 hover:bg-greenroom-600">
-                  <Ticket size={16} className="mr-2" />
-                  Register
-                </Button>
+                <RegisterButton 
+                  eventId={event.id}
+                  price={event.ticketPrice}
+                  currency={event.ticketCurrency}
+                  onSuccess={handleRegistrationSuccess}
+                />
               )}
             </div>
           )}
@@ -164,6 +226,19 @@ const EventDetails = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Left Column */}
           <div className="lg:col-span-3">
+            {/* Show registration or application status if user has registered or applied */}
+            {address && hasRegistered && userTickets && userTickets[0] && (
+              <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+                <RegistrationStatus ticket={userTickets[0]} />
+              </div>
+            )}
+            
+            {address && !hasRegistered && hasApplied && userApplication && (
+              <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+                <ApplicationStatus application={userApplication} />
+              </div>
+            )}
+
             <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
               <h2 className="text-2xl font-bold mb-4">About This Event</h2>
               <p className="text-gray-700 mb-6 whitespace-pre-line">{event.description}</p>
@@ -356,24 +431,62 @@ const EventDetails = () => {
                 </div>
               </div>
               
-              {address && !isOrganizer && event.status !== 'past' && (
+              {address && !isOrganizer && event.status !== 'past' && !hasRegistered && (
                 <div className="mt-6 pt-6 border-t border-gray-100">
                   {event.applicationRequired && event.applicationStatus === 'open' ? (
-                    <Button className="w-full bg-greenroom-500 hover:bg-greenroom-600">
-                      Apply Now
-                    </Button>
+                    <>
+                      {!hasApplied && (
+                        <Button 
+                          onClick={() => setApplicationDialogOpen(true)} 
+                          className="w-full bg-greenroom-500 hover:bg-greenroom-600"
+                        >
+                          <FileText size={16} className="mr-2" />
+                          Apply Now
+                        </Button>
+                      )}
+                      {hasApplied && (
+                        <p className="text-center text-green-600 flex items-center justify-center">
+                          <Check size={16} className="mr-1" />
+                          Application Submitted
+                        </p>
+                      )}
+                    </>
                   ) : (
-                    <Button className="w-full bg-greenroom-500 hover:bg-greenroom-600">
-                      <Ticket size={16} className="mr-2" />
-                      Register
-                    </Button>
+                    <RegisterButton 
+                      eventId={event.id}
+                      price={event.ticketPrice}
+                      currency={event.ticketCurrency}
+                      onSuccess={handleRegistrationSuccess}
+                    />
                   )}
+                </div>
+              )}
+              
+              {hasRegistered && (
+                <div className="mt-6 pt-6 border-t border-gray-100">
+                  <div className="bg-green-50 p-3 rounded-lg flex items-center">
+                    <Check size={16} className="text-green-500 mr-2" />
+                    <span className="text-green-700 text-sm font-medium">You're registered!</span>
+                  </div>
                 </div>
               )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Application Dialog */}
+      <Dialog open={applicationDialogOpen} onOpenChange={setApplicationDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Apply for {event.title}</DialogTitle>
+            <DialogDescription>
+              Please fill out the application form below. The organizer will review your application.
+            </DialogDescription>
+          </DialogHeader>
+          <ApplicationForm eventId={event.id} onSuccess={handleApplicationSuccess} />
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 };
