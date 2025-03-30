@@ -2,10 +2,23 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Menu, X, Search } from "lucide-react";
+import { Menu, X, ChevronDown, Wallet } from "lucide-react";
+import { useWallet } from '@/contexts/WalletContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { address, isConnecting, connect, disconnect } = useWallet();
+
+  // Format address for display
+  const displayAddress = address 
+    ? `${address.substring(0, 6)}...${address.substring(address.length - 4)}`
+    : "";
 
   return (
     <nav className="bg-white/90 backdrop-blur-sm sticky top-0 z-50 w-full border-b">
@@ -33,9 +46,35 @@ const Navbar = () => {
               Explore
             </Link>
             <div className="ml-4 flex items-center">
-              <Button variant="default" className="bg-greenroom-500 hover:bg-greenroom-600">
-                Connect Wallet
-              </Button>
+              {!address ? (
+                <Button 
+                  variant="default" 
+                  className="bg-greenroom-500 hover:bg-greenroom-600 flex items-center gap-2"
+                  onClick={connect}
+                  disabled={isConnecting}
+                >
+                  <Wallet size={16} />
+                  {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+                </Button>
+              ) : (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="border-greenroom-200 text-greenroom-800 flex items-center gap-2">
+                      <Wallet size={16} />
+                      {displayAddress}
+                      <ChevronDown size={14} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => navigator.clipboard.writeText(address)}>
+                      Copy Address
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={disconnect}>
+                      Disconnect
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
           </div>
           
@@ -76,9 +115,42 @@ const Navbar = () => {
               Explore
             </Link>
             <div className="px-3 py-2">
-              <Button variant="default" className="w-full bg-greenroom-500 hover:bg-greenroom-600">
-                Connect Wallet
-              </Button>
+              {!address ? (
+                <Button 
+                  variant="default" 
+                  className="w-full bg-greenroom-500 hover:bg-greenroom-600 flex items-center justify-center gap-2"
+                  onClick={connect}
+                  disabled={isConnecting}
+                >
+                  <Wallet size={16} />
+                  {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+                </Button>
+              ) : (
+                <div className="space-y-2">
+                  <div className="px-3 py-2 bg-gray-50 rounded-md flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Wallet size={16} className="text-greenroom-500" />
+                      <span className="text-sm font-medium">{displayAddress}</span>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full text-sm"
+                    onClick={() => navigator.clipboard.writeText(address)}
+                  >
+                    Copy Address
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full text-sm"
+                    onClick={disconnect}
+                  >
+                    Disconnect
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
