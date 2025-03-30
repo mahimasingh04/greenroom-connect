@@ -32,7 +32,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
             className="w-full h-full object-cover"
           />
           <div className="absolute top-3 left-3 flex gap-2">
-            <Badge className={getStatusColor(event.status)} className="capitalize">
+            <Badge className={getStatusColor(event.status)}>
               {event.status}
             </Badge>
             <Badge className="bg-greenroom-500 hover:bg-greenroom-600">{event.category}</Badge>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -108,12 +107,12 @@ const EventDetails = () => {
           <div className="container mx-auto">
             <div className="max-w-4xl">
               <div className="flex gap-2 mb-4">
-                <Badge className={getStatusColor(event.status)} className="capitalize">
+                <Badge className={getStatusColor(event.status)}>
                   {event.status}
                 </Badge>
                 <Badge className="bg-greenroom-500 hover:bg-greenroom-600">{event.category}</Badge>
                 {event.applicationRequired && (
-                  <Badge className={getApplicationStatusColor(event.applicationStatus)} className="capitalize">
+                  <Badge className={getApplicationStatusColor(event.applicationStatus)}>
                     {event.applicationStatus === 'open' ? 'Applications Open' : 'Applications Closed'}
                   </Badge>
                 )}
