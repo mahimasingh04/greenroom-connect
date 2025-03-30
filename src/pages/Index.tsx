@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
 import { useWallet } from '@/contexts/WalletContext';
+import WalletStatus from '@/components/wallet/WalletStatus';
 
 import EventList from '@/components/events/EventList';
 import HowItWorks from '@/components/home/HowItWorks';
@@ -79,13 +80,17 @@ const Index = () => {
               )}
               
               {address && (
-                <div className="flex flex-wrap gap-4 pt-4">
-                  <Button size="lg" className="bg-white text-greenroom-800 hover:bg-greenroom-50">
-                    <Link to="/explore">Explore Events</Link>
-                  </Button>
-                  <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                    <Link to="/create">Create Event</Link>
-                  </Button>
+                <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-white/20">
+                  <h2 className="text-xl font-bold mb-2">Wallet Connected</h2>
+                  <WalletStatus />
+                  <div className="flex flex-wrap gap-4 pt-4 mt-4 border-t border-white/10">
+                    <Button size="lg" className="bg-white text-greenroom-800 hover:bg-greenroom-50">
+                      <Link to="/explore">Explore Events</Link>
+                    </Button>
+                    <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+                      <Link to="/create">Create Event</Link>
+                    </Button>
+                  </div>
                 </div>
               )}
               

@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { WalletProvider } from "./contexts/WalletContext";
 import Index from "./pages/Index";
 import Events from "./pages/Events";
+import EventDetails from "./pages/EventDetails";
 import Profile from "./pages/Profile";
 import Explore from "./pages/Explore";
 import CreateEvent from "./pages/CreateEvent";
@@ -24,6 +25,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/events" element={<Events />} />
+            <Route path="/events/:id" element={<EventDetails />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/explore" element={<Explore />} />
             <Route path="/create" element={<CreateEvent />} />
