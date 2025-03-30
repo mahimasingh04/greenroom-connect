@@ -10,9 +10,12 @@ import {
   Network, 
   Wallet, 
   ArrowRight,
-  CheckCircle
+  CheckCircle,
+  User,
+  Building
 } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
+import { useWallet } from '@/contexts/WalletContext';
 
 import EventList from '@/components/events/EventList';
 import HowItWorks from '@/components/home/HowItWorks';
@@ -20,6 +23,8 @@ import FeatureShowcase from '@/components/home/FeatureShowcase';
 import Testimonials from '@/components/home/Testimonials';
 
 const Index = () => {
+  const { connect, isConnecting, address } = useWallet();
+  
   return (
     <MainLayout>
       {/* Hero Section */}
@@ -34,14 +39,56 @@ const Index = () => {
               <p className="text-xl text-greenroom-100">
                 Greenroom streamlines the entire event experience - from applications and ticketing to networking and reputation building - all powered by web3 identity.
               </p>
-              <div className="flex flex-wrap gap-4 pt-4">
-                <Button size="lg" className="bg-white text-greenroom-800 hover:bg-greenroom-50">
-                  <Link to="/explore">Explore Events</Link>
-                </Button>
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                  <Link to="/create">Create Event</Link>
-                </Button>
-              </div>
+              
+              {!address && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6">
+                  <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-white/20">
+                    <User size={32} className="text-greenroom-200 mb-3" />
+                    <h2 className="text-xl font-bold mb-2">I'm a User</h2>
+                    <p className="text-greenroom-100 text-sm mb-4">
+                      Discover events, network, and build your on-chain reputation.
+                    </p>
+                    <Button 
+                      size="lg" 
+                      className="w-full bg-white text-greenroom-800 hover:bg-greenroom-50"
+                      onClick={() => connect('user')}
+                      disabled={isConnecting}
+                    >
+                      <Wallet size={16} className="mr-2" />
+                      {isConnecting ? 'Connecting...' : 'Connect as User'}
+                    </Button>
+                  </div>
+                  
+                  <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-white/20">
+                    <Building size={32} className="text-greenroom-200 mb-3" />
+                    <h2 className="text-xl font-bold mb-2">I'm an Organization</h2>
+                    <p className="text-greenroom-100 text-sm mb-4">
+                      Create and manage events, build your organizational presence.
+                    </p>
+                    <Button 
+                      size="lg" 
+                      className="w-full bg-white text-greenroom-800 hover:bg-greenroom-50"
+                      onClick={() => connect('organization')}
+                      disabled={isConnecting}
+                    >
+                      <Wallet size={16} className="mr-2" />
+                      {isConnecting ? 'Connecting...' : 'Connect as Organization'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
+              {address && (
+                <div className="flex flex-wrap gap-4 pt-4">
+                  <Button size="lg" className="bg-white text-greenroom-800 hover:bg-greenroom-50">
+                    <Link to="/explore">Explore Events</Link>
+                  </Button>
+                  <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+                    <Link to="/create">Create Event</Link>
+                  </Button>
+                </div>
+              )}
+              
               <div className="flex items-center gap-2 text-greenroom-100">
                 <CheckCircle size={18} className="text-greenroom-200" />
                 <span>No subscription needed</span>
