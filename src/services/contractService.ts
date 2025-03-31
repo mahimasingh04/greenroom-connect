@@ -1,3 +1,4 @@
+
 import { ethers } from 'ethers';
 
 // Using a dynamic import for the contract artifact since it might not exist during build time
@@ -35,11 +36,22 @@ export class ContractService {
 
   async loadContractArtifact() {
     try {
-      // Dynamic import of the contract artifact
-      const artifact = await import('../artifacts/contracts/EventRegistration.sol/EventRegistration.json');
-      return artifact.default || artifact;
+      // Use a try-catch with a require statement instead of dynamic import
+      // This approach works better with how Vite and TypeScript handle dynamic imports
+      return await new Promise<any>((resolve) => {
+        try {
+          // Using require would work at runtime but TypeScript doesn't like it in modules
+          // So we use a Function constructor as a workaround
+          const getArtifact = new Function('require', 'return require("../artifacts/contracts/EventRegistration.sol/EventRegistration.json")');
+          const artifact = getArtifact(require);
+          resolve(artifact);
+        } catch (err) {
+          console.error('Error loading contract artifact:', err);
+          resolve({ abi: [] });
+        }
+      });
     } catch (error) {
-      console.error('Error loading contract artifact:', error);
+      console.error('Error in loadContractArtifact:', error);
       return { abi: [] };
     }
   }
