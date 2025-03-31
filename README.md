@@ -1,69 +1,86 @@
-# Welcome to your Lovable project
 
-## Project info
+# Greenroom - Web3 Event Platform
 
-**URL**: https://lovable.dev/projects/5fe2bcd7-cd22-4ccf-b9d3-6ecc65a4566e
+A decentralized web3 platform for creating, managing, and participating in events using smart contracts.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- Create and manage events as an organization
+- Register for events using cryptocurrency
+- User profiles with skills and past event history
+- Blockchain-based ticketing system using NFTs
+- Responsive UI using Tailwind CSS and shadcn/ui
 
-**Use Lovable**
+## Prerequisites
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/5fe2bcd7-cd22-4ccf-b9d3-6ecc65a4566e) and start prompting.
+- Node.js (v16+)
+- Hardhat for smart contract development
+- MetaMask or another Ethereum wallet
 
-Changes made via Lovable will be committed automatically to this repo.
+## Getting Started
 
-**Use your preferred IDE**
+1. Clone this repository
+2. Install dependencies:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```bash
+npm install
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+3. Compile the smart contract:
 
-Follow these steps:
+```bash
+npx hardhat compile
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+4. Copy the contract artifacts to the public folder:
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+```bash
+node scripts/copyArtifacts.js
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+5. Start a local Ethereum node:
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+npx hardhat node
+```
+
+6. In a new terminal, deploy the contract to the local node:
+
+```bash
+npx hardhat run scripts/deploy.js --network localhost
+```
+
+7. Copy the deployed contract address
+
+8. Start the development server:
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+9. Open your browser and navigate to `http://localhost:5173`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+10. Connect your MetaMask wallet to the local network (Localhost:8545)
 
-**Use GitHub Codespaces**
+11. In the Create Event page, set the contract address to the one you deployed
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Smart Contracts
 
-## What technologies are used for this project?
+The platform uses a main `EventRegistration.sol` contract which:
 
-This project is built with .
+- Creates and manages events
+- Handles ticket sales
+- Issues NFT tickets to attendees
+- Verifies ticket ownership
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Development Workflow
 
-## How can I deploy this project?
+1. Connect your wallet as either a user or organization
+2. Organizations can create events with customizable parameters
+3. Users can view events and register to attend
+4. Tickets are stored as NFTs on the blockchain
+5. Event creators can verify attendance using the contract's verification system
 
-Simply open [Lovable](https://lovable.dev/projects/5fe2bcd7-cd22-4ccf-b9d3-6ecc65a4566e) and click on Share -> Publish.
+## License
 
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+MIT

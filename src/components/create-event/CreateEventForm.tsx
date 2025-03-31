@@ -18,7 +18,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Calendar as CalendarIcon, Loader2 } from "lucide-react";
+import { Calendar as CalendarIcon, Loader2, Image } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -29,6 +29,17 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useWallet } from "@/contexts/WalletContext";
 import contractService from "@/services/contractService";
+import { EventData } from "@/types/event";
+import { addDays } from "date-fns";
+
+// Array of placeholder images for random selection
+const placeholderImages = [
+  "https://images.unsplash.com/photo-1616046229478-9901c5536a45?q=80&w=3280&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1599946347371-68eb71b16afc?q=80&w=3273&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1569025743873-ea3a9ade89f9?q=80&w=3270&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1560439514-4e9645039924?q=80&w=3270&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?q=80&w=3280&auto=format&fit=crop",
+];
 
 // Form schema validation
 const createEventSchema = z.object({
@@ -40,9 +51,13 @@ const createEventSchema = z.object({
   }),
   totalTickets: z.number().min(1, { message: "Must have at least 1 ticket available" }),
   location: z.string().min(3, { message: "Location is required" }),
+  category: z.string().min(1, { message: "Category is required" }),
+  tags: z.string(),
 });
 
 type CreateEventValues = z.infer<typeof createEventSchema>;
+
+const categoryOptions = ["Conference", "Hackathon", "Workshop", "Meetup", "Launch", "Other"];
 
 export function CreateEventForm() {
   const { address, userType, networkInfo } = useWallet();
@@ -58,6 +73,8 @@ export function CreateEventForm() {
       ticketPrice: "0.01",
       totalTickets: 100,
       location: "",
+      category: "Conference",
+      tags: "Web3, Blockchain",
     },
   });
 
@@ -88,6 +105,40 @@ export function CreateEventForm() {
         data.totalTickets,
         data.eventDate
       );
+
+      const tags = data.tags.split(',').map(tag => tag.trim());
+      
+      // Create event in our local mock database
+      const newEvent: EventData = {
+        id: `${Date.now()}`,
+        title: data.name,
+        description: data.description,
+        date: data.eventDate.toISOString(),
+        endDate: addDays(data.eventDate, 1).toISOString(),
+        location: data.location,
+        imageUrl: placeholderImages[Math.floor(Math.random() * placeholderImages.length)],
+        organizer: {
+          address: address,
+          name: userType === 'organization' ? "Your Organization" : "Your Name"
+        },
+        capacity: data.totalTickets,
+        attendees: 0,
+        category: data.category,
+        tags: tags,
+        registrationDeadline: addDays(new Date(), 7).toISOString(),
+        ticketPrice: data.ticketPrice,
+        ticketCurrency: "ETH",
+        applicationRequired: false,
+        applicationStatus: 'open',
+        status: 'upcoming',
+        contractAddress: tx ? localStorage.getItem('eventContractAddress') || undefined : undefined,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      // In a real app, we would save this to a database
+      // For this demo, we'll simulate a successful creation
+      console.log("Created event:", newEvent);
 
       toast.success("Event created successfully!", {
         description: "Your event has been created on the blockchain.",
@@ -196,6 +247,44 @@ export function CreateEventForm() {
                 <FormControl>
                   <Input placeholder="Physical location or virtual meeting link" {...field} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            control={form.control}
+            name="category"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Category</FormLabel>
+                <FormControl>
+                  <select
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    {...field}
+                  >
+                    {categoryOptions.map((category) => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="tags"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tags</FormLabel>
+                <FormControl>
+                  <Input placeholder="Web3, NFT, DAO" {...field} />
+                </FormControl>
+                <FormDescription>Separate tags with commas</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
