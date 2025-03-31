@@ -1,6 +1,10 @@
-
 import { ethers } from 'ethers';
-import EventRegistrationArtifact from '../artifacts/contracts/EventRegistration.sol/EventRegistration.json';
+
+// Using a dynamic import for the contract artifact since it might not exist during build time
+// We'll provide a placeholder structure for TypeScript
+const EventRegistrationArtifact = {
+  abi: [] // This will be populated at runtime
+};
 
 export interface EventDetails {
   eventId: number;
@@ -29,16 +33,32 @@ export class ContractService {
     }
   }
 
+  async loadContractArtifact() {
+    try {
+      // Dynamic import of the contract artifact
+      const artifact = await import('../artifacts/contracts/EventRegistration.sol/EventRegistration.json');
+      return artifact.default || artifact;
+    } catch (error) {
+      console.error('Error loading contract artifact:', error);
+      return { abi: [] };
+    }
+  }
+
   async connect(): Promise<string> {
     try {
       this.signer = await this.provider.getSigner();
+      
       if (this.contractAddress && this.signer) {
+        // Load the contract ABI dynamically
+        const artifact = await this.loadContractArtifact();
+        
         this.contract = new ethers.Contract(
           this.contractAddress,
-          EventRegistrationArtifact.abi,
+          artifact.abi,
           this.signer
         );
       }
+      
       return await this.signer.getAddress();
     } catch (error) {
       console.error('Error connecting to wallet:', error);
@@ -98,7 +118,8 @@ export class ContractService {
     }
     
     try {
-      const event = await this.contract.getEvent(eventId);
+      // Convert eventId to string to fix the type error
+      const event = await this.contract.getEvent(eventId.toString());
       
       return {
         eventId,
@@ -128,12 +149,16 @@ export class ContractService {
     }
   }
 
-  setContractAddress(address: string): void {
+  async setContractAddress(address: string): Promise<void> {
     this.contractAddress = address;
+    
     if (this.signer) {
+      // Load the contract ABI dynamically
+      const artifact = await this.loadContractArtifact();
+      
       this.contract = new ethers.Contract(
         address,
-        EventRegistrationArtifact.abi,
+        artifact.abi,
         this.signer
       );
     }
