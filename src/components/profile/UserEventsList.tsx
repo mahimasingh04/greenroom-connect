@@ -1,114 +1,113 @@
 
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
-import { getUserTickets } from '@/services/registrationService';
-import { getEventById } from '@/services/eventService';
-import { useWallet } from '@/contexts/WalletContext';
-import { EventData } from '@/types/event';
-import { Calendar, MapPin, ArrowRight } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Calendar, MapPin } from "lucide-react";
 
-const UserEventsList: React.FC = () => {
-  const { address } = useWallet();
+interface UserEventsListProps {
+  userAddress: string;
+}
 
-  // Fetch user's tickets
-  const { data: userTickets, isLoading: isLoadingTickets } = useQuery({
-    queryKey: ['userTickets', address],
-    queryFn: () => address ? getUserTickets(address) : Promise.resolve([]),
-    enabled: !!address
-  });
+const UserEventsList: React.FC<UserEventsListProps> = ({ userAddress }) => {
+  const [loading, setLoading] = useState(true);
+  const [events, setEvents] = useState<any[]>([]);
 
-  // Fetch event details for each ticket
-  const { data: events = [], isLoading: isLoadingEvents } = useQuery({
-    queryKey: ['userEvents', userTickets],
-    queryFn: async () => {
-      if (!userTickets || userTickets.length === 0) return [];
-      
-      // Get unique event IDs
-      const eventIds = [...new Set(userTickets.map(ticket => ticket.eventId))];
-      
-      // Fetch event details for each ID
-      const eventPromises = eventIds.map(id => getEventById(id));
-      const eventResults = await Promise.all(eventPromises);
-      
-      // Filter out any null results and convert to EventData array
-      return eventResults.filter(Boolean) as EventData[];
-    },
-    enabled: !!userTickets && userTickets.length > 0
-  });
+  useEffect(() => {
+    // This is a placeholder for fetching user's upcoming events
+    // In a real implementation, you would call an API with the userAddress
+    const fetchUserEvents = async () => {
+      setLoading(true);
+      try {
+        // Simulate API call delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Mock data - in a real app, this would come from your backend/contract
+        setEvents([
+          {
+            id: '1',
+            name: 'ETH New York',
+            date: '2023-11-15',
+            location: 'New York, NY',
+            status: 'registered'
+          },
+          {
+            id: '2', 
+            name: 'DeFi Summit',
+            date: '2023-12-05',
+            location: 'Miami, FL',
+            status: 'waitlist'
+          }
+        ]);
+      } catch (error) {
+        console.error('Error fetching user events:', error);
+        setEvents([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const isLoading = isLoadingTickets || isLoadingEvents;
+    if (userAddress) {
+      fetchUserEvents();
+    }
+  }, [userAddress]);
 
-  if (!address) {
+  if (loading) {
     return (
-      <div className="text-center p-8 bg-gray-50 rounded-xl">
-        <p className="text-gray-600">Please connect your wallet to view your events.</p>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-gray-100 h-24 rounded-lg animate-pulse"></div>
-        ))}
-      </div>
+      <Card>
+        <CardContent className="p-6">
+          <div className="space-y-4">
+            {[...Array(2)].map((_, i) => (
+              <div key={i} className="border rounded-lg p-4">
+                <Skeleton className="h-5 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/3 mb-1" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   if (events.length === 0) {
     return (
-      <div className="text-center p-8 bg-gray-50 rounded-xl">
-        <p className="text-gray-600">You haven't registered for any events yet.</p>
-        <Button asChild className="mt-4 bg-greenroom-500 hover:bg-greenroom-600">
-          <Link to="/events">Browse Events</Link>
-        </Button>
-      </div>
+      <Card>
+        <CardContent className="p-6 text-center">
+          <p className="text-muted-foreground">No upcoming events found.</p>
+        </CardContent>
+      </Card>
     );
   }
 
-  // Sort events by date (most recent first)
-  const sortedEvents = [...events].sort((a, b) => 
-    new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
-
   return (
-    <div className="space-y-4">
-      {sortedEvents.map(event => (
-        <Link 
-          to={`/events/${event.id}`} 
-          key={event.id} 
-          className="block bg-white rounded-lg p-4 border border-gray-100 hover:border-greenroom-200 hover:shadow-sm transition-all"
-        >
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 shrink-0 rounded overflow-hidden">
-              <img 
-                src={event.imageUrl} 
-                alt={event.title}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="flex-grow">
-              <h3 className="font-medium text-lg mb-1">{event.title}</h3>
-              <div className="flex items-center text-sm text-gray-500 gap-4">
-                <div className="flex items-center">
-                  <Calendar size={14} className="mr-1" />
-                  <span>{formatDate(event.date)}</span>
-                </div>
-                <div className="flex items-center">
-                  <MapPin size={14} className="mr-1" />
-                  <span>{event.location}</span>
-                </div>
+    <Card>
+      <CardContent className="p-6">
+        <div className="space-y-4">
+          {events.map((event) => (
+            <div key={event.id} className="border rounded-lg p-4">
+              <h3 className="font-medium">{event.name}</h3>
+              <div className="flex items-center text-sm text-muted-foreground mb-1">
+                <Calendar size={14} className="mr-1" />
+                {event.date}
+              </div>
+              <div className="flex items-center text-sm text-muted-foreground">
+                <MapPin size={14} className="mr-1" />
+                {event.location}
+              </div>
+              <div className="mt-2">
+                <Badge 
+                  variant={event.status === 'registered' ? 'default' : 'outline'}
+                  className="capitalize"
+                >
+                  {event.status}
+                </Badge>
               </div>
             </div>
-            <ArrowRight size={20} className="text-gray-400" />
-          </div>
-        </Link>
-      ))}
-    </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
