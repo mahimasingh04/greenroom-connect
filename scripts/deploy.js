@@ -11,6 +11,7 @@ async function main() {
   
   const address = await eventRegistration.getAddress();
   console.log("EventRegistration deployed to:", address);
+  console.log("Copy this address and use it in your application!");
 }
 
 main()
