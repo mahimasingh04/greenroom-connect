@@ -78,6 +78,38 @@ export class ContractService {
     }
   }
 
+  async getUserENSName(address: string): Promise<string | null> {
+    try {
+      // Try to resolve ENS name for the address
+      const ensName = await this.provider.lookupAddress(address);
+      return ensName;
+    } catch (error) {
+      console.error('Error getting ENS name:', error);
+      return null;
+    }
+  }
+
+  async getUserAvatar(address: string): Promise<string | null> {
+    try {
+      // First check if the address has an ENS name
+      const ensName = await this.provider.lookupAddress(address);
+      
+      if (ensName) {
+        // Try to get avatar from ENS
+        const resolver = await this.provider.getResolver(ensName);
+        if (resolver) {
+          const avatar = await resolver.getText('avatar');
+          if (avatar) return avatar;
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error getting user avatar:', error);
+      return null;
+    }
+  }
+
   async createEvent(
     name: string,
     ticketPrice: string,
