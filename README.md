@@ -76,10 +76,12 @@ The platform uses a main `EventRegistration.sol` contract which:
 ## Development Workflow
 
 1. Connect your wallet as either a user or organization
-2. Organizations can create events with customizable parameters
-3. Users can view events and register to attend
-4. Tickets are stored as NFTs on the blockchain
-5. Event creators can verify attendance using the contract's verification system
+2. Upon Connecting wallet user mints a NFT linked to thr profile.
+3. Attendee can store skills as assets and they will mint badges and POAPs as Soulbound NFTs.
+4. Organizations can create events with customizable parameters
+5. Users can view events and register to attend
+6. Tickets are stored as NFTs on the blockchain
+7. Event creators can verify attendance using the contract's verification system
 
 ## License
 
