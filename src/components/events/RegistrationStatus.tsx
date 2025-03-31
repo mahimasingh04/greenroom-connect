@@ -13,7 +13,7 @@ const RegistrationStatus: React.FC<RegistrationStatusProps> = ({ ticket }) => {
   const { networkInfo } = useWallet();
   
   // Generate a QR code content based on ticket data
-  const qrContent = `${ticket.id}:${ticket.tokenId || ''}:${ticket.walletAddress}`;
+  const qrContent = `${ticket.id}:${ticket.tokenId || ''}:${ticket.holderAddress}`;
   
   // Get the explorer URL based on the current network
   const getExplorerUrl = (txHash: string) => {
